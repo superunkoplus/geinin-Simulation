@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>お笑い芸人育成シミュレーター</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --panel: #1a1a1a;
+    --border: #333;
+    --text: #e0e0e0;
+    --accent: #ff6b35;
+    --accent2: #4ecdc4;
+    --good: #2ecc71;
+    --bad: #e74c3c;
+    --muted: #888;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  /* ステータスパネル */
+  .status-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+
+  .status-row:last-child { margin-bottom: 0; }
+
+  .label { color: var(--muted); }
+  .value { font-weight: bold; }
+
+  .bar-container {
+    flex: 1;
+    margin: 0 12px;
+    height: 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  .bar.neta { background: var(--accent); }
+  .bar.talk { background: var(--accent2); }
+  .bar.popularity { background: #f1c40f; }
+  .bar.stamina { background: var(--good); }
+
+  /* 月表示 */
+  .month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .month-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+
+  .phase {
+    font-size: 0.8rem;
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ログ */
+  .log-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+  }
+
+  .log-entry {
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #222;
+  }
+
+  .log-entry:last-child { border-bottom: none; margin-bottom: 0; }
+
+  .log-good { color: var(--good); }
+  .log-bad { color: var(--bad); }
+  .log-event { color: #f39c12; }
+  .log-normal { color: var(--text); }
+
+  /* アクション */
+  .action-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .action-title {
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    color: var(--muted);
+  }
+
+  .actions {
+    display: grid;
+    gap: 8px;
+  }
+
+  button.action-btn {
+    background: #252525;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.15s;
+  }
+
+  button.action-btn:hover:not(:disabled) {
+    background: #333;
+    border-color: var(--accent);
+  }
+
+  button.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  button.action-btn .desc {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .next-btn {
+    width: 100%;
+    margin-top: 16px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .next-btn:hover { background: #ff8555; }
+  .next-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* スタート画面 */
+  .start-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .start-screen h2 {
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+
+  .start-screen p {
+    margin-bottom: 24px;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .name-input {
+    background: #252525;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px;
+    border-radius: 6px;
+    width: 100%;
+    max-width: 280px;
+    font-size: 1rem;
+    margin-bottom: 16px;
+  }
+
+  .start-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .hidden { display: none; }
+
+  /* 結果オーバーレイ的な簡易モーダル */
+  .result-box {
+    background: #1f1f1f;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .result-box h3 {
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- スタート画面 -->
+  <div id="start-screen" class="start-screen">
+    <h1>お笑い芸人育成シミュレーター</h1>
+    <p>賞レース制覇とテレビ・舞台での安定した活躍を目指せ。<br>
+    1ヶ月単位で進行。1年＝約30分を想定したテキストベース育成ゲーム。</p>
+    <input type="text" id="player-name" class="name-input" placeholder="芸名を入力（例：山田太郎）" maxlength="12">
+    <br>
+    <button class="start-btn" onclick="startGame()">デビューする</button>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen" class="hidden">
+    <header>
+      <h1 id="display-name">芸名</h1>
+      <div class="subtitle">お笑い芸人育成シミュレーター</div>
+    </header>
+
+    <!-- ステータス -->
+    <div class="status-panel">
+      <div class="status-row">
+        <span class="label">ネタ力</span>
+        <div class="bar-container"><div class="bar neta" id="bar-neta" style="width:30%"></div></div>
+        <span class="value" id="val-neta">30</span>
+      </div>
+      <div class="status-row">
+        <span class="label">トーク力</span>
+        <div class="bar-container"><div class="bar talk" id="bar-talk" style="width:25%"></div></div>
+        <span class="value" id="val-talk">25</span>
+      </div>
+      <div class="status-row">
+        <span class="label">知名度</span>
+        <div class="bar-container"><div class="bar popularity" id="bar-pop" style="width:5%"></div></div>
+        <span class="value" id="val-pop">5</span>
+      </div>
+      <div class="status-row">
+        <span class="label">体力</span>
+        <div class="bar-container"><div class="bar stamina" id="bar-sta" style="width:80%"></div></div>
+        <span class="value" id="val-sta">80</span>
+      </div>
+      <div class="status-row" style="margin-top:12px;">
+        <span class="label">所持金</span>
+        <span class="value" id="val-money">¥30,000</span>
+      </div>
+    </div>
+
+    <!-- 月ヘッダー -->
+    <div class="month-header">
+      <div class="month-title" id="month-title">1年目 4月</div>
+      <div class="phase" id="phase-label">行動選択</div>
+    </div>
+
+    <!-- ログ -->
+    <div class="log-panel" id="log-panel">
+      <div class="log-entry log-normal">事務所に所属した。これからが本番だ。</div>
+    </div>
+
+    <!-- 結果表示（一時） -->
+    <div id="result-area" class="hidden"></div>
+
+    <!-- アクション -->
+    <div class="action-panel" id="action-panel">
+      <div class="action-title">この月の行動を選んでください（残り行動力: <span id="ap-left">2</span>）</div>
+      <div class="actions" id="actions">
+        <!-- 動的生成 -->
+      </div>
+      <button class="next-btn" id="next-btn" onclick="endMonth()" disabled>月末処理へ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================
+// ゲーム状態
+// ======================
+const state = {
+  name: "",
+  year: 1,
+  month: 4,          // 4月スタート
+  neta: 30,
+  talk: 25,
+  popularity: 5,
+  stamina: 80,
+  money: 30000,
+  ap: 2,             // 1ヶ月の行動力
+  maxAp: 2,
+  log: [],
+  selectedActions: [],
+  phase: "action"    // action | result
+};
+
+const MONTH_NAMES = ["", "1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+
+// 行動リスト
+const ACTIONS = [
+  {
+    id: "live",
+    name: "ライブ出演",
+    desc: "ネタ力・知名度アップ。体力消費",
+    cost: 1,
+    effect: () => {
+      const gain = rand(3, 8);
+      state.neta = clamp(state.neta + gain, 0, 100);
+      state.popularity = clamp(state.popularity + rand(1, 3), 0, 100);
+      state.stamina = clamp(state.stamina - rand(8, 15), 0, 100);
+      return `ライブに出演した。ネタ力+${gain}、知名度が少し上がった。`;
+    }
+  },
+  {
+    id: "write",
+    name: "ネタ作り",
+    desc: "ネタ力大幅アップ。体力やや消費",
+    cost: 1,
+    effect: () => {
+      const gain = rand(5, 12);
+      state.neta = clamp(state.neta + gain, 0, 100);
+      state.stamina = clamp(state.stamina - rand(5, 10), 0, 100);
+      return `ひたすらネタを考えた。ネタ力+${gain}。`;
+    }
+  },
+  {
+    id: "talk",
+    name: "トーク練習",
+    desc: "トーク力アップ",
+    cost: 1,
+    effect: () => {
+      const gain = rand(4, 10);
+      state.talk = clamp(state.talk + gain, 0, 100);
+      state.stamina = clamp(state.stamina - rand(3, 8), 0, 100);
+      return `フリートークの練習をした。トーク力+${gain}。`;
+    }
+  },
+  {
+    id: "audition",
+    name: "テレビオーディション",
+    desc: "知名度チャンス。失敗リスクあり",
+    cost: 1,
+    effect: () => {
+      const score = state.neta * 0.4 + state.talk * 0.4 + state.popularity * 0.2 + rand(-15, 15);
+      if (score > 55) {
+        const popGain = rand(5, 12);
+        state.popularity = clamp(state.popularity + popGain, 0, 100);
+        state.money += rand(10000, 30000);
+        return `オーディション合格！知名度+${popGain}、ギャラも入った。`;
+      } else {
+        state.stamina = clamp(state.stamina - 10, 0, 100);
+        return `オーディション落選…。悔しいが経験にはなった。`;
+      }
+    }
+  },
+  {
+    id: "rest",
+    name: "休養",
+    desc: "体力回復。行動力1消費",
+    cost: 1,
+    effect: () => {
+      const heal = rand(15, 30);
+      state.stamina = clamp(state.stamina + heal, 0, 100);
+      return `しっかり休んだ。体力+${heal}。`;
+    }
+  },
+  {
+    id: "parttime",
+    name: "アルバイト",
+    desc: "お金を稼ぐ。知名度は下がるかも",
+    cost: 1,
+    effect: () => {
+      const earn = rand(20000, 45000);
+      state.money += earn;
+      if (Math.random() < 0.3) {
+        state.popularity = clamp(state.popularity - 1, 0, 100);
+        return `アルバイトで¥${earn.toLocaleString()}稼いだ。少し知名度が下がった気がする…。`;
+      }
+      return `アルバイトで¥${earn.toLocaleString()}稼いだ。`;
+    }
+  }
+];
+
+// ======================
+// ユーティリティ
+// ======================
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function addLog(text, type = "normal") {
+  state.log.push({ text, type });
+  if (state.log.length > 30) state.log.shift();
+  renderLog();
+}
+
+function renderLog() {
+  const panel = document.getElementById("log-panel");
+  panel.innerHTML = state.log.map(e => 
+    `<div class="log-entry log-${e.type}">${e.text}</div>`
+  ).join("");
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function updateUI() {
+  document.getElementById("display-name").textContent = state.name;
+  document.getElementById("month-title").textContent = `${state.year}年目 ${MONTH_NAMES[state.month]}`;
+  
+  document.getElementById("val-neta").textContent = state.neta;
+  document.getElementById("val-talk").textContent = state.talk;
+  document.getElementById("val-pop").textContent = state.popularity;
+  document.getElementById("val-sta").textContent = state.stamina;
+  document.getElementById("val-money").textContent = `¥${state.money.toLocaleString()}`;
+
+  document.getElementById("bar-neta").style.width = state.neta + "%";
+  document.getElementById("bar-talk").style.width = state.talk + "%";
+  document.getElementById("bar-pop").style.width = state.popularity + "%";
+  document.getElementById("bar-sta").style.width = state.stamina + "%";
+
+  document.getElementById("ap-left").textContent = state.ap;
+
+  // ボタン有効/無効
+  const nextBtn = document.getElementById("next-btn");
+  nextBtn.disabled = state.ap > 0 && state.selectedActions.length === 0;
+  if (state.ap === 0) nextBtn.disabled = false;
+}
+
+function renderActions() {
+  const container = document.getElementById("actions");
+  container.innerHTML = "";
+
+  ACTIONS.forEach(act => {
+    const btn = document.createElement("button");
+    btn.className = "action-btn";
+    btn.disabled = state.ap < act.cost || state.stamina < 10;
+    btn.innerHTML = `${act.name}<span class="desc">${act.desc}</span>`;
+    btn.onclick = () => doAction(act);
+    container.appendChild(btn);
+  });
+}
+
+// ======================
+// ゲームフロー
+// ======================
+function startGame() {
+  const name = document.getElementById("player-name").value.trim() || "無名の芸人";
+  state.name = name;
+  state.log = [{ text: `${name}、事務所に所属した。これからが本番だ。`, type: "normal" }];
+  
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("game-screen").classList.remove("hidden");
+  
+  updateUI();
+  renderLog();
+  renderActions();
+}
+
+function doAction(act) {
+  if (state.ap < act.cost) return;
+  
+  state.ap -= act.cost;
+  state.selectedActions.push(act.id);
+  
+  const result = act.effect();
+  addLog(result, "normal");
+  
+  // 体力が極端に低い場合の警告
+  if (state.stamina < 20) {
+    addLog("体力がかなり落ちている…。無理は禁物だ。", "bad");
+  }
+  
+  updateUI();
+  renderActions();
+  
+  if (state.ap === 0) {
+    document.getElementById("next-btn").disabled = false;
+  }
+}
+
+function endMonth() {
+  // 月末ランダムイベント
+  const events = [
+    { cond: () => state.popularity > 20 && Math.random() < 0.25, 
+      text: "雑誌の取材が来た！知名度が少し上がった。", 
+      effect: () => { state.popularity = clamp(state.popularity + rand(2,5),0,100); },
+      type: "event" },
+    { cond: () => state.stamina < 30 && Math.random() < 0.4,
+      text: "過労で体調を崩した…。来月は休め。",
+      effect: () => { state.stamina = clamp(state.stamina - 10,0,100); },
+      type: "bad" },
+    { cond: () => Math.random() < 0.15,
+      text: "先輩芸人からアドバイスをもらった。ネタ力とトーク力が少し上がった。",
+      effect: () => { 
+        state.neta = clamp(state.neta + 2,0,100); 
+        state.talk = clamp(state.talk + 2,0,100); 
+      },
+      type: "good" },
+    { cond: () => state.money < 10000 && Math.random() < 0.5,
+      text: "生活が苦しい…。アルバイトを考えた方がいいかも。",
+      effect: () => {},
+      type: "bad" }
+  ];
+
+  events.forEach(ev => {
+    if (ev.cond()) {
+      ev.effect();
+      addLog(ev.text, ev.type);
+    }
+  });
+
+  // 月を進める
+  state.month++;
+  if (state.month > 12) {
+    state.month = 1;
+    state.year++;
+    addLog(`—— ${state.year}年目が始まった ——`, "event");
+  }
+
+  // 体力の自然回復（少し）
+  state.stamina = clamp(state.stamina + rand(5, 12), 0, 100);
+  
+  // 行動力リセット
+  state.ap = state.maxAp;
+  state.selectedActions = [];
+
+  // 簡易勝利チェック（超ざっくり）
+  if (state.popularity >= 80 && state.neta >= 70) {
+    addLog("【快挙】全国区の人気芸人として認知され始めた！", "good");
+  }
+
+  updateUI();
+  renderActions();
+  document.getElementById("next-btn").disabled = true;
+}
+</script>
+</body>
+</html>
