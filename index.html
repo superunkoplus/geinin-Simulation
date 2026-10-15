@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お笑い芸人育成シミュレーター</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+
+    <!-- スタート画面 -->
+    <div id="start-screen" class="start-screen">
+      <h1>お笑い芸人育成シミュレーター</h1>
+      <p>賞レース制覇とテレビ・舞台での安定した活躍を目指せ。<br>
+      1ヶ月単位で進行するテキストベース育成ゲーム。</p>
+      <input type="text" id="player-name" class="name-input" placeholder="芸名を入力（例：山田太郎）" maxlength="12">
+      <br>
+      <button class="start-btn" id="start-btn">デビューする</button>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="hidden">
+      <header>
+        <h1 id="display-name">芸名</h1>
+        <div class="subtitle">お笑い芸人育成シミュレーター</div>
+      </header>
+
+      <!-- ステータス -->
+      <div class="status-panel">
+        <div class="status-row">
+          <span class="label">ネタ力</span>
+          <div class="bar-container"><div class="bar neta" id="bar-neta"></div></div>
+          <span class="value" id="val-neta">30</span>
+        </div>
+        <div class="status-row">
+          <span class="label">トーク力</span>
+          <div class="bar-container"><div class="bar talk" id="bar-talk"></div></div>
+          <span class="value" id="val-talk">25</span>
+        </div>
+        <div class="status-row">
+          <span class="label">知名度</span>
+          <div class="bar-container"><div class="bar popularity" id="bar-pop"></div></div>
+          <span class="value" id="val-pop">5</span>
+        </div>
+        <div class="status-row">
+          <span class="label">体力</span>
+          <div class="bar-container"><div class="bar stamina" id="bar-sta"></div></div>
+          <span class="value" id="val-sta">80</span>
+        </div>
+        <div class="status-row money-row">
+          <span class="label">所持金</span>
+          <span class="value" id="val-money">¥30,000</span>
+        </div>
+      </div>
+
+      <!-- 月ヘッダー -->
+      <div class="month-header">
+        <div class="month-title" id="month-title">1年目 4月</div>
+        <div class="phase" id="phase-label">行動選択</div>
+      </div>
+
+      <!-- ログ -->
+      <div class="log-panel" id="log-panel"></div>
+
+      <!-- アクション -->
+      <div class="action-panel" id="action-panel">
+        <div class="action-title">
+          この月の行動を選んでください（残り行動力: <span id="ap-left">2</span>）
+        </div>
+        <div class="actions" id="actions"></div>
+        <button class="next-btn" id="next-btn" disabled>月末処理へ</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
