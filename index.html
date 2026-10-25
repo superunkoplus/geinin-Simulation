@@ -1,80 +1,112 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>お笑い芸人育成シミュレーター</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>芸人育成シミュレーション - 試作版</title>
+<style>
+:root{--bg:#10131b;--panel:#1a2030;--panel2:#222a3d;--text:#f2f4f8;--muted:#aab4c8;--line:#35405a;--accent:#ffc857;--green:#7ed6a5;--red:#ff8585;--blue:#8ec5ff}*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#111522,#171d2c);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select{font:inherit}button{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#2b3550;color:var(--text);cursor:pointer}button:hover{filter:brightness(1.12)}button:disabled{opacity:.4;cursor:not-allowed}.primary{background:var(--accent);color:#241b08;border-color:var(--accent);font-weight:800}.danger{background:#552e3a}.wrap{max-width:1120px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}.brand{font-weight:900;font-size:22px}.brand span{color:var(--accent)}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}.span12{grid-column:span 12}.span8{grid-column:span 8}.span7{grid-column:span 7}.span6{grid-column:span 6}.span5{grid-column:span 5}.span4{grid-column:span 4}h1,h2,h3,p{margin-top:0}h1{font-size:clamp(26px,4vw,40px);line-height:1.2}h2{font-size:20px;margin-bottom:10px}h3{font-size:16px;margin-bottom:8px}.hero{padding:clamp(22px,5vw,48px);background:radial-gradient(circle at 85% 10%,#4c3e61 0,transparent 35%),linear-gradient(135deg,#222a42,#181e2e);border-radius:22px;border:1px solid var(--line)}.hero p{max-width:680px;color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:8px}.field{display:flex;flex-direction:column;gap:5px;margin:10px 0}.field input,.field select{border:1px solid var(--line);border-radius:9px;background:#111725;color:var(--text);padding:10px}.statgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.stat{padding:10px;background:var(--panel2);border-radius:10px}.stat .name{color:var(--muted);font-size:12px}.stat .val{font-size:20px;font-weight:800}.rank{font-size:13px;color:var(--accent);font-weight:800}.bar{height:6px;border-radius:9px;background:#0e1320;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#69c7ff,#ffc857)}.candidate{border:1px solid var(--line);border-radius:12px;padding:12px;background:#171d2b}.candidate.selected{border-color:var(--accent)}.candidate h3{margin:0}.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;background:#34405c;color:#dce6ff;margin:2px}.pill.gold{background:#5b4821;color:#ffe39a}.pill.blue{background:#203e5e;color:#a9d7ff}.pill.red{background:#572e3c;color:#ffb0bd}.log{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow:auto}.logitem{padding:9px 11px;border-radius:9px;background:#141a28;border-left:3px solid var(--line)}.logitem.event{border-color:var(--accent)}.logitem.good{border-color:var(--green)}.logitem.bad{border-color:var(--red)}.actionbtn{display:flex;flex-direction:column;text-align:left;min-height:96px;gap:4px}.actionbtn strong{font-size:15px}.actionbtn small{color:var(--muted);font-weight:400}.actionbtn .cost{margin-top:auto;font-size:12px;color:var(--accent)}.notice{padding:12px;border:1px solid #66552b;background:#30291b;border-radius:10px;color:#ffe5a2}.hidden{display:none!important}.weekline{display:flex;gap:6px;flex-wrap:wrap}.dot{width:12px;height:12px;border-radius:4px;background:#34405c}.dot.done{background:var(--green)}.dot.current{background:var(--accent)}.small{font-size:12px}.footer{padding:20px 0;text-align:center;color:var(--muted);font-size:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.empty{color:var(--muted);padding:14px;border:1px dashed var(--line);border-radius:10px}.modalback{position:fixed;inset:0;background:#050811c9;display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}.modal{width:min(620px,100%);max-height:85vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 20px 80px #0008}.modal h2{color:var(--accent)}.modalfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}@media(max-width:760px){.span8,.span7,.span6,.span5,.span4{grid-column:span 12}.statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:12px}.two{grid-template-columns:1fr}.top{align-items:flex-start}}
+</style>
 </head>
-<body>
-  <div class="container">
-
-    <!-- スタート画面 -->
-    <div id="start-screen" class="start-screen">
-      <h1>お笑い芸人育成シミュレーター</h1>
-      <p>賞レース制覇とテレビ・舞台での安定した活躍を目指せ。<br>
-      1ヶ月単位で進行するテキストベース育成ゲーム。</p>
-      <input type="text" id="player-name" class="name-input" placeholder="芸名を入力（例：山田太郎）" maxlength="12">
-      <br>
-      <button class="start-btn" id="start-btn">デビューする</button>
-    </div>
-
-    <!-- ゲーム画面 -->
-    <div id="game-screen" class="hidden">
-      <header>
-        <h1 id="display-name">芸名</h1>
-        <div class="subtitle">お笑い芸人育成シミュレーター</div>
-      </header>
-
-      <!-- ステータス -->
-      <div class="status-panel">
-        <div class="status-row">
-          <span class="label">ネタ力</span>
-          <div class="bar-container"><div class="bar neta" id="bar-neta"></div></div>
-          <span class="value" id="val-neta">30</span>
-        </div>
-        <div class="status-row">
-          <span class="label">トーク力</span>
-          <div class="bar-container"><div class="bar talk" id="bar-talk"></div></div>
-          <span class="value" id="val-talk">25</span>
-        </div>
-        <div class="status-row">
-          <span class="label">知名度</span>
-          <div class="bar-container"><div class="bar popularity" id="bar-pop"></div></div>
-          <span class="value" id="val-pop">5</span>
-        </div>
-        <div class="status-row">
-          <span class="label">体力</span>
-          <div class="bar-container"><div class="bar stamina" id="bar-sta"></div></div>
-          <span class="value" id="val-sta">80</span>
-        </div>
-        <div class="status-row money-row">
-          <span class="label">所持金</span>
-          <span class="value" id="val-money">¥30,000</span>
-        </div>
-      </div>
-
-      <!-- 月ヘッダー -->
-      <div class="month-header">
-        <div class="month-title" id="month-title">1年目 4月</div>
-        <div class="phase" id="phase-label">行動選択</div>
-      </div>
-
-      <!-- ログ -->
-      <div class="log-panel" id="log-panel"></div>
-
-      <!-- アクション -->
-      <div class="action-panel" id="action-panel">
-        <div class="action-title">
-          この月の行動を選んでください（残り行動力: <span id="ap-left">2</span>）
-        </div>
-        <div class="actions" id="actions"></div>
-        <button class="next-btn" id="next-btn" disabled>月末処理へ</button>
-      </div>
-    </div>
-
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
+<body><div class="wrap">
+<header class="top"><div class="brand">🎙️ 芸人育成 <span>SIM</span> <span class="muted" style="font-size:12px;font-weight:500">試作版 0.1</span></div><div class="actions" id="headerActions"></div></header>
+<main id="app"></main><div class="footer">試作版 / データはこのブラウザのローカルストレージに保存されます</div></div><div id="modalRoot"></div>
+<script>
+'use strict';
+const SAVE_KEY='comedian_training_sim_v01';
+const STAT_KEYS=['boke','tsukkomi','idea','sociability','motivation'];
+const STAT_NAMES={boke:'ボケ',tsukkomi:'ツッコミ',idea:'発想力',sociability:'社交性',motivation:'モチベ',popularity:'人気',relationship:'関係値',funny:'面白さ',explosion:'爆発力',fame:'知名度'};
+const RANKS=[['F',0],['E',15],['D',28],['C',42],['B',58],['A',75],['S',90]];
+const ABILITIES={
+ idea1:{name:'発想○',type:'blue',scope:'personal',desc:'発想力の成長量 +15%。',growth:{idea:.15}},
+ idea2:{name:'発想◎',type:'blue',scope:'personal',desc:'発想力の成長量 +30%。発想○から進化。',growth:{idea:.30},upgradeFrom:'idea1'},
+ spirit:{name:'精神力',type:'blue',scope:'personal',desc:'モチベが下がりにくくなる。相方所持時は解散提案も起きにくい。',effects:{motivationLoss:.5,breakupRisk:.5}},
+ gambler:{name:'ギャンブラー',type:'red',scope:'personal',desc:'週末イベントで所持金が増減することがある。'},
+ smoker:{name:'喫煙者',type:'red',scope:'personal',desc:'社交性の成長量 +10%。健康リスクイベントが発生することがある。',growth:{sociability:.1}},
+ champion:{name:'チャンピオン',type:'gold',scope:'personal',desc:'賞レース優勝者の証。人気とギャラにボーナス。',effects:{popularity:5,fee:1.25}},
+ specialStudent:{name:'特待生',type:'gold',scope:'combo',desc:'養成所の卒業ライブ優勝で獲得。プロ編向けの特別な実績。'},
+ mixedGender:{name:'男女コンビ',type:'gold',scope:'combo',desc:'性別の異なる2人で結成されたコンビ。将来のテレビオーディションで有利になる。'}
+};
+const CANDIDATES=[
+ {id:'haru',surname:'春日',gender:'男性',role:'ツッコミ',stats:{boke:28,tsukkomi:65,idea:43,sociability:55,motivation:65},ability:'spirit',bio:'堅実なツッコミ。気持ちが折れにくい。'},
+ {id:'natsu',surname:'夏目',gender:'女性',role:'ボケ',stats:{boke:67,tsukkomi:25,idea:72,sociability:48,motivation:60},ability:'idea1',bio:'発想力が高く、独特なネタを生みやすい。'},
+ {id:'aki',surname:'秋山',gender:'男性',role:'ボケ',stats:{boke:58,tsukkomi:32,idea:49,sociability:76,motivation:58},ability:null,bio:'社交性が高く、人脈づくりが得意。'},
+ {id:'fuyu',surname:'冬木',gender:'女性',role:'ツッコミ',stats:{boke:32,tsukkomi:72,idea:52,sociability:35,motivation:74},ability:'spirit',bio:'ツッコミが鋭い。努力家だが人付き合いは不器用。'},
+ {id:'minato',surname:'湊',gender:'男性',role:'ボケ',stats:{boke:70,tsukkomi:24,idea:68,sociability:62,motivation:55},ability:'gambler',bio:'華があるが、金銭感覚に難あり。'},
+ {id:'sakura',surname:'桜井',gender:'女性',role:'ツッコミ',stats:{boke:35,tsukkomi:67,idea:61,sociability:68,motivation:66},ability:'smoker',bio:'対応力が高く、場をまとめるのが得意。'},
+ {id:'kuroda',surname:'黒田',gender:'男性',role:'ボケ',stats:{boke:63,tsukkomi:39,idea:58,sociability:40,motivation:70},ability:'idea1',bio:'寡黙な職人肌。ネタ作りに集中する。'}
+];
+const ACTIONS=[
+ {id:'write',name:'ネタ作り',desc:'新しいネタを作る、または既存ネタを改良。',kind:'write'},
+ {id:'rehearse',name:'ネタ合わせ',desc:'相方と練習。ネタと関係値を伸ばす。',kind:'rehearse'},
+ {id:'parttime',name:'バイト',desc:'所持金を増やす。モチベが少し下がることも。',kind:'parttime'},
+ {id:'rest',name:'休養',desc:'モチベを回復する。',kind:'rest'},
+ {id:'class',name:'ネタ見せ授業',desc:'養成所限定。発想力や実演能力を鍛える。',kind:'class'}
+];
+let state=null, view='title', selectedAction=null, selectedCandidate=null;
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}function clamp(n,min=0,max=100){return Math.max(min,Math.min(max,n))}function rank(n){let r='F';for(const [x,v] of RANKS)if(n>=v)r=x;return r}function pct(n){return Math.round(n)+'%'}function money(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function basePerson(surname,gender,role,stats,ability=null){return {surname,gender,role,stats:{...stats},abilities:ability?[ability]:[]}}
+function newGame(data){const loop=Number(data.loop||1);const bonus=Math.min(8,(loop-1)*2);const stats={boke:35+bonus,tsukkomi:35+bonus,idea:32+bonus,sociability:35+bonus,motivation:65};state={version:1,loop,year:0,month:4,week:1,turnInWeek:0,player:basePerson(data.surname,data.gender,data.role,stats),partner:null,combo:{popularity:5,relationship:50,abilities:[],joinedAt:null},money:5000,notebooks:[],nextNoteId:1,logs:[],flags:{partnerMeetPending:true,enteredEvents:[],scheduled:{},eventFlags:{},graduated:false},achievements:[],lastEvent:null,weekActionNames:[],weekEventCount:0,statsHistory:[],rivalStrength:40};log(`第${loop}周回目。${data.surname}（${data.gender}・${data.role}）は養成所生活を開始した。`);save();view='game';render();}
+function log(message,type=''){state.logs.unshift({message,type,at:`${state.month}月${state.week}週`});if(state.logs.length>100)state.logs.pop()}
+function save(){if(state){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state))}catch(e){console.warn('save failed',e)}}}
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.version===1&&s.player){state=s;return true}}catch(e){}return false}
+function clearSave(){localStorage.removeItem(SAVE_KEY);state=null;view='title';render()}
+function hasAbility(person,id){return !!person?.abilities?.includes(id)}
+function addAbility(person,id){if(!person||!ABILITIES[id]||hasAbility(person,id))return false;const a=ABILITIES[id];if(a.upgradeFrom){person.abilities=person.abilities.filter(x=>x!==a.upgradeFrom)}person.abilities.push(id);log(`${person.surname||'コンビ'}が特殊能力「${a.name}」を獲得${a.upgradeFrom?'（上位能力へ進化）':''}。`,'good');return true}
+function loseAbility(person,id){if(!person||!hasAbility(person,id))return false;const a=ABILITIES[id];if(a.type==='gold')return false;person.abilities=person.abilities.filter(x=>x!==id);log(`特殊能力「${a.name}」を失った。`,'bad');return true}
+function grow(person,key,base){if(!person)return;let rate=1;for(const id of person.abilities||[]){const g=ABILITIES[id]?.growth?.[key];if(g)rate+=g}const amount=Math.max(0,Math.round(base*rate));person.stats[key]=clamp((person.stats[key]||0)+amount);return amount}
+function abilityPills(person){if(!person?.abilities?.length)return '<span class="muted small">なし</span>';return person.abilities.map(id=>{const a=ABILITIES[id];return a?`<span class="pill ${a.type}">${esc(a.name)}</span>`:''}).join('')}
+function statCard(key,val){return `<div class="stat"><div class="name">${STAT_NAMES[key]||key}</div><div class="val">${Math.round(val)} <span class="rank">${rank(val)}</span></div><div class="bar"><i style="width:${clamp(val)}%"></i></div></div>`}
+function personStats(p,keys=STAT_KEYS){return `<div class="statgrid">${keys.map(k=>statCard(k,p.stats[k]||0)).join('')}</div>`}
+function header(){const h=$('#headerActions');if(!h)return;if(view==='game'||view==='event'||view==='graduation'){h.innerHTML=`<button onclick="manualSave()">保存</button><button onclick="goTitle()">タイトルへ</button>`}else h.innerHTML=''}
+function render(){header();const app=$('#app');if(view==='title')app.innerHTML=titleHtml();else if(view==='setup')app.innerHTML=setupHtml();else if(view==='game')app.innerHTML=gameHtml();else if(view==='graduation')app.innerHTML=graduationHtml();else app.innerHTML=titleHtml()}
+function titleHtml(){const exists=!!localStorage.getItem(SAVE_KEY);return `<section class="hero"><div class="pill gold">養成所編 / 0年目</div><h1 style="margin-top:16px">舞台の先に、<br>売れる未来を。</h1><p>養成所生からスタートし、相方探し、ネタ作り、ライブを通じて成長する芸人育成シミュレーション。行動と選択で、自分だけの芸人人生を切り開こう。</p><div class="actions"><button class="primary" onclick="showSetup()">新しく始める</button><button onclick="continueGame()" ${exists?'':'disabled'}>続きから始める</button><button onclick="showOther()">その他</button></div></section><div class="grid" style="margin-top:14px"><section class="card span4"><h3>📅 48週の育成</h3><p class="muted">毎週3回の行動で能力を磨き、イベントを通じて活動を広げる。</p></section><section class="card span4"><h3>🧩 特殊能力</h3><p class="muted">金・青・赤の特能を獲得。上位能力への進化や喪失も。</p></section><section class="card span4"><h3>💾 ブラウザセーブ</h3><p class="muted">進行状況はこのブラウザに保存。試作版のためデータ消去には注意。</p></section></div>`}
+function showSetup(){view='setup';render()}function showOther(){openModal('その他','<p>試作版 0.1</p><p class="muted">現在は養成所編の基本サイクルを検証するためのバージョンです。プロ編、豊富なイベント、賞レースの複数ラウンドは今後の拡張項目です。</p><p>イベント型：告知・選択・解決・報酬</p><p>特殊能力型：分類・対象・説明・成長補正・効果・上位能力</p>',[{label:'閉じる',fn:'closeModal()'}])}
+function setupHtml(){return `<div class="grid"><section class="card span7"><h2>プレイヤー設定</h2><p class="muted">名前は苗字で表示されます。初期能力は基本固定で、周回数に応じて小さなボーナスが付きます。</p><form id="setupForm" onsubmit="startFromForm(event)"><label class="field">苗字<input name="surname" maxlength="10" required placeholder="例：山田" value=""></label><label class="field">性別<select name="gender"><option>男性</option><option>女性</option><option>その他</option></select></label><label class="field">役割<select name="role"><option>ボケ</option><option>ツッコミ</option></select></label><div class="actions"><button class="primary" type="submit">ゲーム開始</button><button type="button" onclick="view='title';render()">戻る</button></div></form></section><section class="card span5"><h2>今回の試作範囲</h2><ul class="muted"><li>養成所編：4月1週〜翌3月4週</li><li>毎週3回の行動</li><li>相方探しと候補選択</li><li>ネタ作成・改良</li><li>養成所バトルライブ</li><li>卒業ライブと特待生</li><li>特殊能力・セーブ</li></ul></section></div>`}
+function startFromForm(e){e.preventDefault();const f=new FormData(e.target);newGame({surname:String(f.get('surname')).trim()||'新人',gender:f.get('gender'),role:f.get('role'),loop:1})}
+function continueGame(){if(load()){view=state.flags.graduated?'graduation':'game';render()}else showSetup()}
+function manualSave(){save();toast('セーブしました。')}
+function goTitle(){save();view='title';render()}
+function gameHtml(){if(!state)return titleHtml();if(state.flags.graduated)return graduationHtml();const scheduled=state.flags.scheduled[weekKey()]||null;const remaining=3-state.turnInWeek;const p=state.player;const partner=state.partner;return `<div class="grid"><section class="card span8"><div class="top" style="margin-bottom:8px"><div><div class="muted small">養成所編 / 0年目</div><h2 style="margin:2px 0">${state.month}月 ${state.week}週目</h2></div><div style="text-align:right"><div class="pill gold">周回 ${state.loop}</div><div class="muted small">今週の行動：${state.turnInWeek}/3</div></div></div><div class="weekline" aria-label="週内行動進捗">${[0,1,2].map(i=>`<span class="dot ${i<state.turnInWeek?'done':i===state.turnInWeek?'current':''}"></span>`).join('')}</div>${scheduled?`<div class="notice" style="margin-top:12px"><strong>今週の固定予定：</strong>${esc(scheduled.name)}${scheduled.kind==='graduation'?'（必須参加）':''}<div class="small">${esc(scheduled.desc||'')}</div>${state.turnInWeek===2?`<button class="primary" style="margin-top:10px" onclick="takeScheduledAction()">固定予定を実行（3回目）</button>`:''}</div>`:''}<div class="grid" style="margin-top:14px"><section class="card span6"><h3>あなた：${esc(p.surname)}</h3><div class="muted small">${esc(p.gender)} / ${esc(p.role)}</div>${personStats(p)}<div style="margin-top:8px">${abilityPills(p)}</div></section><section class="card span6"><h3>相方</h3>${partner?`<div class="muted small">${esc(partner.surname)} / ${esc(partner.gender)} / ${esc(partner.role)}</div>${personStats(partner)}<div style="margin-top:8px">${abilityPills(partner)}</div>`:`<div class="empty">現在、相方はいません。相方探しイベントを待つか、ピン芸人として行動できます。</div>`}</section></div><div class="two" style="margin-top:12px"><div class="stat"><div class="name">コンビ人気</div><div class="val">${state.combo.popularity} <span class="rank">${rank(state.combo.popularity)}</span></div></div><div class="stat"><div class="name">関係値</div><div class="val">${partner?state.combo.relationship:'—'} ${partner?`<span class="rank">${rank(state.combo.relationship)}</span>`:''}</div></div></div><div class="stat" style="margin-top:8px"><div class="name">所持金</div><div class="val">${money(state.money)}</div></div><h2 style="margin-top:18px">今週の行動</h2><p class="muted small">行動を3回選ぶと週末イベントが発生します。固定予定がある週は予定が行動枠に入り、別の予定は重複しません。</p><div class="grid">${ACTIONS.map(a=>{let disabled=state.turnInWeek>=3||(a.id==='rehearse'&&!partner)||(a.id==='class'&&state.year!==0)||(scheduled&&state.turnInWeek===2);return `<div class="span6"><button class="actionbtn" style="width:100%" onclick="chooseAction('${a.id}')" ${disabled?'disabled':''}><strong>${a.name}</strong><small>${a.desc}</small><span class="cost">${a.id==='parttime'?'収入 +' :a.id==='rehearse'?'相方が必要':a.id==='class'?'養成所限定':'行動を1回消費'}</span></button></div>`}).join('')}</div>${state.turnInWeek>=3?`<div class="notice" style="margin-top:12px">今週の行動は終了しました。週末処理を進めてください。 <button class="primary" onclick="finishWeek()">週末イベントへ進む</button></div>`:''}</section><section class="card span4"><h2>ネタ帳 <span class="muted">${state.notebooks.length}/15</span></h2>${state.notebooks.length?`<div class="log">${state.notebooks.map(n=>`<div class="candidate"><strong>${esc(n.title)}</strong> <span class="pill">${esc(n.genre)}</span><div class="statgrid" style="margin-top:8px">${['funny','explosion','fame'].map(k=>`<div><div class="name muted small">${STAT_NAMES[k]}</div><b>${n[k]} <span class="rank">${rank(n[k])}</span></b></div>`).join('')}</div></div>`).join('')}</div>`:`<div class="empty">まだネタがありません。ネタ作りから始めましょう。</div>`}<h2 style="margin-top:18px">コンビ特能</h2>${state.combo.abilities.length?abilityPills({abilities:state.combo.abilities}):'<span class="muted small">なし</span>'}<h2 style="margin-top:18px">今週の記録</h2><div class="log">${state.logs.slice(0,8).map(l=>`<div class="logitem ${l.type}"><div class="small muted">${esc(l.at)}</div>${esc(l.message)}</div>`).join('')}</div></section></div>`}
+function weekKey(){return `${state.month}-${state.week}`}
+function chooseAction(id){if(!state||state.turnInWeek>=3)return;const a=ACTIONS.find(x=>x.id===id);if(!a)return;const scheduled=state.flags.scheduled[weekKey()];if(scheduled&&state.turnInWeek===2){toast('今週の3回目は固定予定です。');return}if(id==='rehearse'&&!state.partner){toast('相方がいないため選べません。');return}if(id==='class'&&state.year!==0){toast('この行動は養成所編限定です。');return}if(id==='write'){openWriteModal();return}if(id==='rehearse'){doAction(id);return}if(id==='parttime'){doAction(id);return}if(id==='rest'){doAction(id);return}if(id==='class'){doAction(id);return}}
+function doAction(id){const p=state.player;let msg='',type='';switch(id){case'write':createNote();return;case'rehearse':{const n=chooseBestNote();if(n){n.funny=clamp(n.funny+rand(2,5));n.explosion=clamp(n.explosion+rand(0,3));grow(state.partner,'motivation',-1);state.combo.relationship=clamp(state.combo.relationship+rand(2,5));grow(p,'motivation',-2);msg=`「${n.title}」をネタ合わせ。面白さが伸び、関係値が上がった。`}else{grow(p,'idea',2);state.combo.relationship=clamp(state.combo.relationship+1);msg='ネタ合わせの代わりに掛け合いの基礎練習。発想力が少し上がった。'}break}case'parttime':{const earned=rand(1800,3600);state.money+=earned;grow(p,'motivation',-rand(1,4));msg=`バイトをして ${money(earned)} を稼いだ。`;break}case'rest':{const gain=rand(12,22);p.stats.motivation=clamp(p.stats.motivation+gain);if(state.partner)state.partner.stats.motivation=clamp(state.partner.stats.motivation+rand(5,12));msg=`休養した。モチベが ${gain} 回復した。`;type='good';break}case'class':{const key=['idea',p.role==='ボケ'?'boke':'tsukkomi','sociability'][rand(0,2)];const gain=grow(p,key,rand(2,5));msg=`ネタ見せ授業に参加。${STAT_NAMES[key]}が${gain}上がった。`;break}}
+state.turnInWeek++;state.weekActionNames.push(aName(id));log(msg,type);if(state.turnInWeek===3){if(state.flags.scheduled[weekKey()]){const s=state.flags.scheduled[weekKey()];log(`固定予定「${s.name}」の開催準備が整った。`,'event')}}save();render()}
+function aName(id){return ACTIONS.find(a=>a.id===id)?.name||id}
+function openWriteModal(){let opts=state.notebooks.map(n=>`<option value="${n.id}">${esc(n.title)}（面白さ${n.funny}）</option>`).join('');openModal('ネタ作り',`<p class="muted">新しいネタを作るか、既存ネタを改良します。発想力や特能によって結果が変化します。</p><label class="field">作業内容<select id="writeMode" onchange="toggleWriteMode()"><option value="new" ${state.notebooks.length>=15?'disabled':''}>新しいネタを作る${state.notebooks.length>=15?'（上限）':''}</option><option value="improve" ${state.notebooks.length?'':'disabled'}>既存ネタを改良する</option></select></label><div id="newFields"><label class="field">ネタのタイトル<input id="noteTitle" maxlength="30" placeholder="例：初めてのアルバイト"></label><label class="field">ジャンル<select id="noteGenre"><option>漫才</option><option>コント</option><option>フリップ</option><option>即興</option></select></label></div><div id="improveFields" class="hidden"><label class="field">改良するネタ<select id="improveId">${opts}</select></label></div>`,[{label:'キャンセル',fn:'closeModal()'},{label:'決定',className:'primary',fn:'confirmWrite()'}]);}
+function toggleWriteMode(){const m=$('#writeMode')?.value;$('#newFields')?.classList.toggle('hidden',m!=='new');$('#improveFields')?.classList.toggle('hidden',m!=='improve')}
+function confirmWrite(){const mode=$('#writeMode')?.value;if(mode==='improve'){const id=Number($('#improveId')?.value);const n=state.notebooks.find(x=>x.id===id);if(!n){toast('改良するネタを選んでください。');return}const gain=grow(state.player,'idea',1);n.funny=clamp(n.funny+rand(2,5)+Math.floor((state.player.stats.idea||0)/35));n.explosion=clamp(n.explosion+rand(0,4));n.fame=clamp(n.fame+rand(0,2));log(`「${n.title}」を改良。面白さなどが上がった。`,'good')}else{if(state.notebooks.length>=15){toast('ネタは最大15本です。');return}const title=$('#noteTitle')?.value.trim()||`ネタ${state.nextNoteId}`;const genre=$('#noteGenre')?.value||'漫才';const idea=state.player.stats.idea;const success=rand(1,100)<=clamp(52+Math.floor(idea*.42)+(state.player.stats.motivation-50)*.25,10,95);let funny,explosion;if(success){funny=clamp(rand(20,38)+Math.floor(idea*.35)+Math.floor(state.player.stats.boke*.12));explosion=clamp(rand(12,42)+Math.floor(idea*.25));log(`新ネタ「${title}」が形になった。`,'good')}else{funny=clamp(rand(8,22)+Math.floor(idea*.2));explosion=clamp(rand(5,25));log(`新ネタ「${title}」はまだ粗削り。改良の余地がある。`,'bad')}state.notebooks.push({id:state.nextNoteId++,title,genre,funny,explosion,fame:0,uses:0,createdAt:`${state.month}月${state.week}週`})}closeModal();state.turnInWeek++;if(state.turnInWeek===3&&state.flags.scheduled[weekKey()])log(`固定予定「${state.flags.scheduled[weekKey()].name}」の開催準備が整った。`,'event');save();render()}
+function createNote(){openWriteModal()}
+function chooseBestNote(){return [...state.notebooks].sort((a,b)=>b.funny-a.funny)[0]||null}
+function takeScheduledAction(){const s=state.flags.scheduled[weekKey()];if(!s||state.turnInWeek!==2)return;state.turnInWeek++;state.weekActionNames.push(s.name);log(`行動3回目：固定予定「${s.name}」に参加する準備をした。`,'event');save();render()}
+function finishWeek(){if(state.turnInWeek<3)return;const key=weekKey();const scheduled=state.flags.scheduled[key];if(scheduled){resolveScheduled(scheduled);delete state.flags.scheduled[key]}else if(state.flags.partnerMeetPending){partnerMeeting();state.flags.partnerMeetPending=false}else{resolveRandomEvent()}state.turnInWeek=0;state.weekActionNames=[];advanceWeek();save();if(state.flags.graduated){view='graduation'}render()}
+function partnerMeeting(){const pool=CANDIDATES.filter(c=>!state.flags.seenCandidates?.includes(c.id));const unlocked=pool.length?pool:CANDIDATES;const picked=[];while(picked.length<4){const c=unlocked[rand(0,unlocked.length-1)];if(!picked.includes(c))picked.push(c)}state.flags.seenCandidates=[...(state.flags.seenCandidates||[]),...picked.map(c=>c.id)];openCandidateModal(picked);log('相方探しの会に参加。4人の候補者と出会った。','event')}
+function openCandidateModal(candidates){const cards=candidates.map(c=>`<div class="candidate"><h3>${esc(c.surname)} <span class="pill">${esc(c.gender)}</span></h3><div class="muted small">${esc(c.role)} / ${esc(c.bio)}</div><div class="statgrid" style="margin-top:8px">${['boke','tsukkomi','idea','sociability'].map(k=>`<div><div class="name">${STAT_NAMES[k]}</div><b>${c.stats[k]} <span class="rank">${rank(c.stats[k])}</span></b></div>`).join('')}</div><div style="margin:8px 0">${c.ability?`<span class="pill ${ABILITIES[c.ability].type}">${ABILITIES[c.ability].name}</span>`:'<span class="muted small">特殊能力なし</span>'}</div><button class="primary" onclick="selectPartner('${c.id}')">この人と組む</button></div>`).join('');openModal('相方探しの会',`<p>相方候補が4人います。誰とも組まずに進むこともできます。</p><div class="grid">${cards}</div>`,[{label:'今回は組まない',fn:'declinePartner()'}],true)}
+function selectPartner(id){const c=CANDIDATES.find(x=>x.id===id);if(!c)return;state.partner={...basePerson(c.surname,c.gender,c.role,clone(c.stats),c.ability),candidateId:c.id};state.combo.relationship=50;state.combo.joinedAt='0年目';if(state.player.gender!==state.partner.gender&&!state.combo.abilities.includes('mixedGender'))state.combo.abilities.push('mixedGender');log(`${c.surname}とコンビを結成した。`,'good');closeModal();save();render()}
+function declinePartner(){log('今回は相方を選ばず、ひとりで活動を続けることにした。');closeModal();save();render()}
+function resolveRandomEvent(){const events=[];if(!state.partner)events.push(()=>{log('授業で顔を合わせた同期と少し話した。相方候補との出会いにつながるかもしれない。','event');if(Math.random()<.45){state.flags.partnerMeetPending=true;log('次週以降に相方探しの機会が生まれそうだ。','event')}});events.push(()=>{const r=rand(1,5);if(r===1){grow(state.player,'idea',rand(1,3));log('講師からネタの着眼点を褒められた。発想力が伸びた。','good')}else if(r===2){state.player.stats.motivation=clamp(state.player.stats.motivation-rand(3,8));log('ネタがうまくまとまらず、少し落ち込んだ。','bad')}else if(r===3){state.money+=1000;log('同期の手伝いをしてお礼をもらった。所持金 +¥1,000。','good')}else if(r===4&&state.notebooks.length){const n=chooseBestNote();n.fame=clamp(n.fame+rand(1,4));log(`「${n.title}」の評判が少し広まった。知名度が上がった。`,'good')}else{if(state.partner)state.combo.relationship=clamp(state.combo.relationship+rand(1,4));log('同期のネタを見て刺激を受けた。','event')}});if(state.partner&&state.combo.relationship<25)events.push(()=>{if(Math.random()<.25){log('ネタの方向性をめぐって相方と意見がぶつかった。','bad');if(!hasAbility(state.player,'spirit')&&!hasAbility(state.partner,'spirit'))state.combo.relationship=clamp(state.combo.relationship-rand(3,7))}else log('相方と話し合い、少し理解が深まった。','good')});if(state.player.abilities.includes('gambler'))events.push(()=>{const n=Math.random()<.5?rand(1000,5000):-rand(800,4000);state.money=Math.max(0,state.money+n);log(`ギャンブラーのイベント：所持金が${n>=0?'増えた':'減った'}（${n>=0?'+':''}${money(n)}）。`,n>=0?'good':'bad')});events[rand(0,events.length-1)]()}
+function scheduleNextLive(month){const target=`${month}-4`;if(state.flags.scheduled[target])return;state.flags.scheduled[target]={kind:'battle',name:`${month}月 養成所バトルライブ`,desc:'任意参加。出場する場合は3回目の行動枠が固定されます。',required:false};log(`${month}月のバトルライブが告知された。参加するか選べる。`,'event');openModal('バトルライブの告知',`<p>${month}月4週目に養成所バトルライブが開催されます。エントリーすると開催週の3回目の行動がライブに固定されます。</p>`,[{label:'今回は出ない',fn:'skipLive('+month+')'},{label:'エントリーする',className:'primary',fn:'enterLive('+month+')'}],true)}
+function skipLive(month){log(`${month}月のバトルライブにはエントリーしなかった。`);closeModal();save();render()}
+function enterLive(month){const target=`${month}-4`;state.flags.scheduled[target]={kind:'battle',name:`${month}月 養成所バトルライブ`,desc:'エントリー済み。3回目の行動枠を使用。',required:true};state.flags.enteredEvents.push(target);log(`${month}月のバトルライブにエントリーした。`,'good');closeModal();save();render()}
+function resolveScheduled(s){if(s.kind==='graduation'){runShow('卒業ライブ',true);return}if(s.kind==='battle'){runShow(s.name,false);return}}
+function runShow(name,graduation){if(!state.partner){log(`${name}：相方がいないため出場できなかった。`,'bad');return}if(!state.notebooks.length){log(`${name}：披露できるネタがなく、出場できなかった。`,'bad');return}const note=chooseBestNote();const personal=(state.player.stats.boke+state.player.stats.tsukkomi+state.partner.stats.boke+state.partner.stats.tsukkomi)/4;const combo=state.combo.relationship*.12+state.combo.popularity*.08;const famePenalty=note.fame>70?(note.fame-70)*.08:0;const score=note.funny*.52+note.explosion*.22+personal*.25+combo-famePenalty+rand(-12,12);const rival=state.rivalStrength+rand(-12,15);note.uses++;note.fame=clamp(note.fame+rand(2,5));state.combo.popularity=clamp(state.combo.popularity+(score>rival?rand(3,7):rand(0,3)));if(score>rival){state.money+=graduation?5000:1000;log(`${name}：ネタ「${note.title}」で好評価！ 勝利（評価 ${Math.round(score)} / 相手 ${Math.round(rival)}）。人気が上がった。`,'good');if(graduation){if(!state.combo.abilities.includes('specialStudent'))state.combo.abilities.push('specialStudent');state.achievements.push('卒業ライブ優勝');}}else{log(`${name}：ネタ「${note.title}」を披露したが、惜しくも敗退（評価 ${Math.round(score)} / 相手 ${Math.round(rival)}）。`,'bad');if(graduation)log('卒業ライブは悔しい結果となったが、養成所生活はここで一区切り。','event')}if(graduation){state.flags.graduated=true;state.flags.graduationResult=score>rival?'優勝':'敗退';}}
+function advanceWeek(){if(state.flags.graduated)return;state.week++;if(state.week>4){state.week=1;state.month++;if(state.month>12)state.month=1}if(state.month===4&&state.week===1&&state.year===0&&!state.flags.partnerMeetDone){state.flags.partnerMeetPending=true;state.flags.partnerMeetDone=true}if(state.week===4&&[5,7,9,11,1].includes(state.month)){const next=state.month===1?2:state.month+1; // notice is issued by weekend event below
+}if(state.month===3&&state.week===3&&!state.flags.scheduled['3-4']){state.flags.scheduled['3-4']={kind:'graduation',name:'卒業ライブ',desc:'養成所編の最終イベント。必ず参加します。',required:true};log('来週は卒業ライブ。必ず参加することになった。','event')}if(state.month===3&&state.week===4&&!state.flags.scheduled['3-4']&&!state.flags.graduated){state.flags.scheduled['3-4']={kind:'graduation',name:'卒業ライブ',desc:'養成所編の最終イベント。必ず参加します。',required:true}}if(state.month===3&&state.week===4&&!state.flags.graduated&&state.turnInWeek===0){/* graduation schedule stays for the week */}if(state.month===5&&state.week===1)state.flags.liveNoticeMonth=6;if(state.week===4&&[5,7,9,11,1].includes(state.month)){const next=state.month===1?2:state.month+1;state.flags.pendingLiveNotice=next} }
+function afterWeekAdvance(){if(state.flags.pendingLiveNotice){const m=state.flags.pendingLiveNotice;delete state.flags.pendingLiveNotice;scheduleNextLive(m)}}
+const oldFinishWeek=finishWeek;finishWeek=function(){if(state.turnInWeek<3)return;const key=weekKey();const scheduled=state.flags.scheduled[key];if(scheduled){resolveScheduled(scheduled);delete state.flags.scheduled[key]}else if(state.flags.partnerMeetPending){partnerMeeting();state.flags.partnerMeetPending=false;state.flags.partnerMeetDone=true}else{resolveRandomEvent()}state.turnInWeek=0;state.weekActionNames=[];advanceWeek();save();if(state.flags.graduated){view='graduation';render();return}render();if(state.week===1&&[6,8,10,12,2].includes(state.month)){const prev=state.month===2?1:state.month-1; scheduleNextLive(state.month)} }
+function graduationHtml(){if(!state)return titleHtml();const result=state.flags.graduationResult||'終了';return `<section class="hero"><div class="pill gold">養成所編 完了</div><h1 style="margin-top:16px">卒業ライブ、終演。</h1><p>0年目の養成所生活が終了しました。今回の結果は「${esc(result)}」。この試作版ではここで一区切りとなります。</p><div class="actions"><button class="primary" onclick="nextLoop()">次の周回へ</button><button onclick="exportSave()">セーブデータを書き出す</button><button onclick="view='game';render()">最終ステータスを見る</button></div></section><div class="grid" style="margin-top:14px"><section class="card span6"><h2>最終ステータス</h2>${personStats(state.player)}<div style="margin-top:8px">${abilityPills(state.player)}</div></section><section class="card span6"><h2>実績</h2>${state.achievements.length?state.achievements.map(a=>`<span class="pill gold">${esc(a)}</span>`).join(''):'<p class="muted">獲得実績はありません。</p>'}<h3 style="margin-top:18px">コンビ特能</h3>${state.combo.abilities.length?state.combo.abilities.map(a=>ABILITIES[a]?`<span class="pill ${ABILITIES[a].type}">${esc(ABILITIES[a].name)}</span>`:`<span class="pill gold">${esc(a)}</span>`).join(''):'<span class="muted">なし</span>'}</section></div>`}
+function nextLoop(){const loop=state.loop+1;openModal('次の周回',`<p>${loop}周目を開始します。初期能力に小さなボーナスが付きます。</p><p class="muted">現在の周回データは上書きされます。実績や候補解放は試作版では一部のみ保持します。</p>`,[{label:'キャンセル',fn:'closeModal()'},{label:'新しい周回を始める',className:'primary',fn:'startNextLoop('+loop+')'}])}
+function startNextLoop(loop){const surname=state.player.surname,gender=state.player.gender,role=state.player.role;newGame({surname,gender,role,loop});closeModal()}
+function exportSave(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='comedian-sim-save.json';a.click();URL.revokeObjectURL(url)}
+function openModal(title,body,buttons=[],large=false){$('#modalRoot').innerHTML=`<div class="modalback" role="dialog" aria-modal="true"><div class="modal"><h2>${title}</h2><div>${body}</div><div class="modalfoot">${buttons.map(b=>`<button class="${b.className||''}" onclick="${b.fn}">${b.label}</button>`).join('')}</div></div></div>`}
+function closeModal(){$('#modalRoot').innerHTML=''}function toast(msg){const old=$('#toast');if(old)old.remove();const d=document.createElement('div');d.id='toast';d.textContent=msg;d.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ffc857;color:#241b08;padding:10px 16px;border-radius:10px;font-weight:700;z-index:30;box-shadow:0 8px 30px #0008';document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+// Generic event/ability scaffolding: add definitions to EVENTS and route through processEvent when expanding the prototype.
+const EVENTS=[
+ {id:'partner_meeting',type:'choice',trigger:{month:4,week:1,once:true},title:'相方探しの会',description:'相方候補4人から選ぶ。選ばない選択も可能。'},
+ {id:'live_notice',type:'scheduled_choice',trigger:{months:[5,7,9,11,1],week:4},title:'バトルライブ告知',description:'翌月4週目の参加予定を選択する。'},
+ {id:'graduation_live',type:'scheduled_mandatory',trigger:{month:3,week:4},title:'卒業ライブ',description:'養成所編の最終ライブ。優勝でコンビ特能「特待生」。'}
+];
+function init(){if(load()){view=state.flags.graduated?'graduation':'game'}else view='title';render()}
+init();
+</script></body></html>
