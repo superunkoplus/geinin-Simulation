@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>デジタルカードゲーム Prototype</title>
+  <style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  min-height: 100vh;
+  padding: 12px;
+}
+
+#game {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.leader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #16213e;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.cpu-leader {
+  border: 2px solid #e94560;
+}
+
+.player-leader {
+  border: 2px solid #0f3460;
+}
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.field-label {
+  width: 40px;
+  font-size: 12px;
+  color: #888;
+  text-align: right;
+}
+
+.slot {
+  width: 100px;
+  height: 120px;
+  background: #0f3460;
+  border: 2px dashed #533483;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  transition: 0.15s;
+}
+
+.slot:hover {
+  border-color: #e94560;
+}
+
+.slot.has-card {
+  background: #1f4068;
+  border-style: solid;
+  border-color: #4a90d9;
+}
+
+.slot.acted {
+  opacity: 0.55;
+}
+
+.slot.guard {
+  box-shadow: 0 0 0 3px #f1c40f;
+}
+
+.card-name {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0 4px;
+  word-break: break-all;
+}
+
+.card-stats {
+  font-size: 16px;
+  margin-top: 6px;
+  color: #f1c40f;
+}
+
+.card-cost {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  background: #e94560;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#turn-info {
+  text-align: center;
+  font-size: 18px;
+  margin: 12px 0;
+  color: #f1c40f;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+button {
+  background: #e94560;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background: #ff6b81;
+}
+
+.hand {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 0;
+  min-height: 110px;
+}
+
+.hand-card {
+  min-width: 90px;
+  height: 100px;
+  background: #16213e;
+  border: 2px solid #4a90d9;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: 0.15s;
+}
+
+.hand-card:hover,
+.hand-card.selected {
+  border-color: #f1c40f;
+  transform: translateY(-6px);
+}
+
+.hand-card .card-type {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.log {
+  background: #0d1b2a;
+  border-radius: 8px;
+  padding: 10px;
+  height: 160px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 12px;
+  color: #ccc;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 12px 0;
+}  </style>
+</head>
+<body>
+  <div id="game">
+    <!-- CPU側 -->
+    <div class="leader cpu-leader">
+      <div>CPU HP: <span id="cpu-hp">25</span></div>
+      <div>マナ: <span id="cpu-mana">0/0</span> ／ エナジー: <span id="cpu-energy">0</span></div>
+      <button onclick="attackLeader()">リーダーを攻撃</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field-label">後列</div>
+      <div id="cpu-slot-3" class="slot"></div>
+      <div id="cpu-slot-4" class="slot"></div>
+      <div id="cpu-slot-5" class="slot"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">前列</div>
+      <div id="cpu-slot-0" class="slot"></div>
+      <div id="cpu-slot-1" class="slot"></div>
+      <div id="cpu-slot-2" class="slot"></div>
+    </div>
+
+    <hr>
+
+    <!-- プレイヤー側 -->
+    <div class="field-row">
+      <div class="field-label">前列</div>
+      <div id="player-slot-0" class="slot"></div>
+      <div id="player-slot-1" class="slot"></div>
+      <div id="player-slot-2" class="slot"></div>
+    </div>
+    <div class="field-row">
+      <div class="field-label">後列</div>
+      <div id="player-slot-3" class="slot"></div>
+      <div id="player-slot-4" class="slot"></div>
+      <div id="player-slot-5" class="slot"></div>
+    </div>
+
+    <div class="leader player-leader">
+      <div>あなた HP: <span id="player-hp">25</span></div>
+      <div>マナ: <span id="player-mana">0/0</span> ／ エナジー: <span id="player-energy">0</span></div>
+    </div>
+
+    <div id="turn-info">準備中...</div>
+
+    <div class="controls">
+      <button id="btn-end-turn" onclick="endTurn()">ターン終了</button>
+      <button id="btn-energy" onclick="chargeEnergy()">エナジー溜める (1マナ)</button>
+      <button id="btn-energy-ability" onclick="useEnergyAbility()">エナジー能力発動</button>
+    </div>
+
+    <div id="player-hand" class="hand"></div>
+
+    <div id="log" class="log"></div>
+  </div>
+
+  <script>
+// カードデータ（スプレッドシートから変換）
+const CARDS = [
+  {
+    id: "c001",
+    name: "スティッチ",
+    flavor: "あたしの犬",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 1,
+    attack: 2,
+    health: 2,
+    category: "ヒーロー・エイリアン",
+    keywords: [],
+    text: "",
+    effects: []
+  },
+  {
+    id: "c002",
+    name: "ハデス",
+    flavor: "冥界の主",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 4,
+    attack: 2,
+    health: 2,
+    category: "ヴィランズ・神格",
+    keywords: [],
+    text: "登場時:あなたの捨て札からキャラクター・カード1枚を選んで手札に戻す。",
+    effects: [
+      { trigger: "summon", id: "return_from_grave", target: "self_grave_character", value: 1 }
+    ]
+  },
+  {
+    id: "c003",
+    name: "マキシマス",
+    flavor: "宮殿の騎馬",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 5,
+    attack: 4,
+    health: 5,
+    category: "仲間",
+    keywords: [{ type: "guard" }],
+    text: "護衛",
+    effects: []
+  },
+  {
+    id: "c004",
+    name: "アリエル",
+    flavor: "麗しい歌姫",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 3,
+    attack: 2,
+    health: 3,
+    category: "ヒーロー・プリンセス",
+    keywords: [{ type: "song_voice", value: 5 }],
+    text: "歌声5 登場時:あなたの山札の上から4枚を見る。歌・カードを1枚公開し手札に加えてもよい。残りを好きな順番でデッキの下に置く。",
+    effects: [
+      { trigger: "summon", id: "look_top", value: 4, filter: "song", optional: true }
+    ]
+  },
+  {
+    id: "c005",
+    name: "アルキメデス",
+    flavor: "教育のあるフクロウ",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 2,
+    attack: 1,
+    health: 3,
+    category: "仲間",
+    keywords: [{ type: "snipe" }],
+    text: "狙い撃ち",
+    effects: []
+  },
+  {
+    id: "c006",
+    name: "マレフィセント",
+    flavor: "魔女",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 3,
+    attack: 2,
+    health: 2,
+    category: "ヴィランズ・魔法使い",
+    keywords: [],
+    text: "登場時:あなたの山札からカードを1枚引いてもよい。",
+    effects: [
+      { trigger: "summon", id: "draw", value: 1, optional: true }
+    ]
+  },
+  {
+    id: "c007",
+    name: "ゼウス",
+    flavor: "稲妻の神",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 4,
+    attack: 0,
+    health: 4,
+    category: "神格",
+    keywords: [
+      { type: "charge" },
+      { type: "bold", value: 4 }
+    ],
+    text: "速攻　果敢+4",
+    effects: []
+  },
+  {
+    id: "c008",
+    name: "ジーニー",
+    flavor: "私はあなたの子分",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 6,
+    attack: 3,
+    health: 4,
+    category: "仲間",
+    keywords: [{ type: "evasion" }],
+    text: "回避　登場時:キャラクター1体を選び、そのキャラクターのプレイヤーの手札に戻してもよい。",
+    effects: [
+      { trigger: "summon", id: "return_to_hand", target: "any_character", optional: true }
+    ]
+  },
+  {
+    id: "c009",
+    name: "クスコ",
+    flavor: "気分屋の王様",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 5,
+    attack: 2,
+    health: 4,
+    category: "王様",
+    keywords: [],
+    text: "退場時:相手のキャラクター1体を選んで、退場させる。",
+    effects: [
+      { trigger: "death", id: "destroy", target: "enemy_character", value: 1 }
+    ]
+  },
+  {
+    id: "c010",
+    name: "マッドハッター",
+    flavor: "親切な主催者",
+    class: "neutral",
+    type: "character",
+    isSong: false,
+    cost: 7,
+    attack: 1,
+    health: 6,
+    category: "",
+    keywords: [],
+    text: "このキャラクターがチャレンジされるたび、カードを1枚引いてもよい。",
+    effects: [
+      { trigger: "challenged", id: "draw", value: 1, optional: true }
+    ]
+  },
+  {
+    id: "a001",
+    name: "うろたえるのじゃ！",
+    flavor: "",
+    class: "neutral",
+    type: "action",
+    isSong: false,
+    cost: 1,
+    attack: null,
+    health: null,
+    category: "アクション",
+    keywords: [],
+    text: "コスト2以下のキャラクター1体またはアイテム1つを選び、それのプレイヤーの手札に戻す。",
+    effects: [
+      { trigger: "play", id: "return_to_hand", target: "cost_leq_2", value: 1 }
+    ]
+  },
+  {
+    id: "a002",
+    name: "怒ってばかりね",
+    flavor: "",
+    class: "neutral",
+    type: "action",
+    isSong: false,
+    cost: 2,
+    attack: null,
+    health: null,
+    category: "アクション",
+    keywords: [],
+    text: "キャラクター1体を選び、このターン、攻撃力を+3する。",
+    effects: [
+      { trigger: "play", id: "buff_attack", target: "any_character", value: 3, duration: "this_turn" }
+    ]
+  },
+  {
+    id: "s001",
+    name: "A WHOLE NEW WORLD",
+    flavor: "",
+    class: "neutral",
+    type: "action",
+    isSong: true,
+    cost: 5,
+    attack: null,
+    health: null,
+    category: "アクション・歌",
+    keywords: [],
+    text: "各プレイヤーは手札を全て捨て、カードを5枚引く。",
+    effects: [
+      { trigger: "play", id: "mulligan_all", value: 5 }
+    ]
+  },
+  {
+    id: "i001",
+    name: "野獣の鏡",
+    flavor: "",
+    class: "neutral",
+    type: "item",
+    isSong: false,
+    cost: 2,
+    attack: null,
+    health: 2,
+    category: "アイテム",
+    keywords: [],
+    text: "各ターン終了時、ターンプレイヤーはカードを1枚引く。",
+    effects: [
+      { trigger: "turn_end", id: "draw", value: 1, target: "turn_player" }
+    ]
+  },
+  {
+    id: "i002",
+    name: "ファシリエのカード",
+    flavor: "",
+    class: "neutral",
+    type: "item",
+    isSong: false,
+    cost: 2,
+    attack: null,
+    health: 3,
+    category: "アイテム",
+    keywords: [],
+    text: "あなたの各ターンに一度、このターン、あなたが次にプレイするアクションのコストの支払いは1減る。",
+    effects: [
+      { trigger: "continuous", id: "reduce_next_action_cost", value: 1, once_per_turn: true }
+    ]
+  }
+];
+
+// カードをIDで取得するヘルパー
+function getCardById(id) {
+  return CARDS.find(c => c.id === id);
+}
+
+// ディープコピーしてインスタンスを作る（フィールドに出す用）
+function createCardInstance(cardId) {
+  const base = getCardById(cardId);
+  if (!base) return null;
+  return {
+    ...JSON.parse(JSON.stringify(base)),
+    instanceId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+    currentHealth: base.health,
+    maxHealth: base.health,
+    currentAttack: base.attack,
+    canAct: false,          // このターン行動可能か
+    hasActed: false,        // このターン既に行動したか
+    isSummonedThisTurn: true,
+    buffs: []
+  };
+}class Player {
+  constructor(id, name) {
+    this.id = id;
+    this.name = name;
+    this.hp = 25;
+    this.maxMana = 0;
+    this.mana = 0;
+    this.energy = 0;
+    this.energyChargedThisTurn = false;
+    this.deck = [];
+    this.hand = [];
+    this.field = [null, null, null, null, null, null]; // 0-2:前列 3-5:後列
+    this.grave = [];
+    this.fatigue = 0;
+    this.class = "neutral"; // 後でリーダー選択で変更
+  }
+
+  buildDeck(cardIds) {
+    // サンプルなので適当にカードを水増しして40枚近くにする
+    this.deck = [];
+    for (let i = 0; i < 40; i++) {
+      const id = cardIds[i % cardIds.length];
+      this.deck.push(createCardInstance(id));
+    }
+    this.shuffle();
+  }
+
+  shuffle() {
+    for (let i = this.deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
+    }
+  }
+
+  draw(n = 1) {
+    for (let i = 0; i < n; i++) {
+      if (this.deck.length === 0) {
+        this.fatigue++;
+        this.hp -= this.fatigue;
+        if (window.game) {
+          window.game.addLog(`${this.name} は疲労ダメージ ${this.fatigue} を受けた（残りHP: ${this.hp}）`);
+          window.game.checkWin();
+        }
+        continue;
+      }
+      if (this.hand.length >= 10) {
+        // 手札上限 → 墓地へ
+        const burned = this.deck.shift();
+        this.grave.push(burned);
+        if (window.game) window.game.addLog(`${this.name} の手札が上限のためカードが墓地へ`);
+      } else {
+        this.hand.push(this.deck.shift());
+      }
+    }
+  }
+}// ゲーム全体の状態管理
+class Game {
+  constructor() {
+    this.players = {
+      player: new Player("player", "プレイヤー"),
+      cpu: new Player("cpu", "CPU")
+    };
+    this.currentPlayerId = null;
+    this.turnCount = 0;
+    this.phase = "setup"; // setup, mulligan, play, end
+    this.winner = null;
+    this.log = [];
+  }
+
+  start() {
+    // デッキ構築（今は全カードから適当に40枚相当を作る。サンプルなので重複あり）
+    const allIds = CARDS.map(c => c.id);
+    this.players.player.buildDeck(allIds);
+    this.players.cpu.buildDeck(allIds);
+
+    // 先攻後攻ランダム
+    this.currentPlayerId = Math.random() < 0.5 ? "player" : "cpu";
+    this.firstPlayerId = this.currentPlayerId;
+    this.addLog(`${this.players[this.currentPlayerId].name} が先攻です`);
+
+    // 初期手札
+    this.players.player.draw(5);
+    this.players.cpu.draw(5);
+
+    this.phase = "mulligan";
+    this.addLog("マリガンフェイズです（今はスキップ）");
+    this.startTurn();
+  }
+
+  startTurn() {
+    this.turnCount++;
+    const p = this.players[this.currentPlayerId];
+    this.phase = "play";
+
+    // マナ増加・回復
+    if (p.maxMana < 10) p.maxMana++;
+    p.mana = p.maxMana;
+    p.energyChargedThisTurn = false;
+
+    // エナジーはターンまたぎで保持（最大3）
+
+    // ドロー（先攻の最初のターンはなし）
+    if (!(this.turnCount === 1 && this.currentPlayerId === this.firstPlayerId)) {
+      p.draw(1);
+    }
+
+    // 場のキャラの行動権リセット
+    p.field.forEach(card => {
+      if (card) {
+        card.hasActed = false;
+        card.canAct = !card.isSummonedThisTurn || card.keywords.some(k => k.type === "charge");
+        // 速攻はチャレンジのみ可能（歌うことは不可）なので、canActはtrueにするが歌う判定で制限
+        card.isSummonedThisTurn = false;
+      }
+    });
+
+    this.addLog(`--- ${p.name} のターン ---`);
+    this.addLog(`マナ: ${p.mana}/${p.maxMana}  エナジー: ${p.energy}/3`);
+
+    if (this.currentPlayerId === "cpu") {
+      setTimeout(() => this.cpuTurn(), 600);
+    } else {
+      this.updateUI();
+    }
+  }
+
+  endTurn() {
+    const p = this.players[this.currentPlayerId];
+    this.addLog(`${p.name} のターン終了`);
+
+    // ターン終了時効果など（簡易）
+    p.field.forEach(card => {
+      if (card && card.effects) {
+        card.effects.forEach(eff => {
+          if (eff.trigger === "turn_end") {
+            // 簡易実装
+          }
+        });
+      }
+    });
+
+    // プレイヤー交代
+    this.currentPlayerId = this.currentPlayerId === "player" ? "cpu" : "player";
+    this.startTurn();
+  }
+
+  // カードを場に出す
+  playCharacterOrItem(playerId, handIndex, fieldIndex) {
+    const p = this.players[playerId];
+    const card = p.hand[handIndex];
+    if (!card) return false;
+    if (card.type !== "character" && card.type !== "item") return false;
+    if (p.mana < card.cost) {
+      this.addLog("マナが足りません");
+      return false;
+    }
+    if (p.field[fieldIndex]) {
+      this.addLog("その枠は空いていません");
+      return false;
+    }
+
+    p.mana -= card.cost;
+    p.hand.splice(handIndex, 1);
+    const instance = createCardInstance(card.id);
+    p.field[fieldIndex] = instance;
+    this.addLog(`${p.name} が ${instance.name} を場に出した`);
+
+    // 召喚時効果（簡易）
+    this.resolveSummonEffects(instance, playerId);
+
+    this.updateUI();
+    return true;
+  }
+
+  // アクション / 歌カードを使用
+  playAction(playerId, handIndex, payWithCharacterIndex = null) {
+    const p = this.players[playerId];
+    const card = p.hand[handIndex];
+    if (!card || card.type !== "action") return false;
+
+    let paid = false;
+
+    if (payWithCharacterIndex !== null) {
+      // 歌支払い
+      const char = p.field[payWithCharacterIndex];
+      if (!char || char.type !== "character") return false;
+      if (char.hasActed) {
+        this.addLog("そのキャラは既に行動済みです");
+        return false;
+      }
+      if (char.isSummonedThisTurn && !char.keywords.some(k => k.type === "charge")) {
+        // 出たターンは原則行動不可。速攻でも歌うことはできない
+        this.addLog("出たターンのキャラは歌えません");
+        return false;
+      }
+      // 歌声がある場合はその値、なければコストで判定
+      let payValue = char.cost;
+      const songVoice = char.keywords.find(k => k.type === "song_voice");
+      if (songVoice) payValue = songVoice.value;
+
+      if (payValue < card.cost) {
+        this.addLog("コストが足りません（歌声/コスト不足）");
+        return false;
+      }
+      char.hasActed = true;
+      paid = true;
+      this.addLog(`${char.name} で歌って ${card.name} を使用`);
+    } else {
+      // 通常マナ支払い
+      if (p.mana < card.cost) {
+        this.addLog("マナが足りません");
+        return false;
+      }
+      p.mana -= card.cost;
+      paid = true;
+      this.addLog(`${p.name} が ${card.name} を使用（マナ）`);
+    }
+
+    if (!paid) return false;
+
+    p.hand.splice(handIndex, 1);
+    // 効果解決（簡易）
+    this.resolvePlayEffects(card, playerId);
+    p.grave.push(card);
+    this.updateUI();
+    return true;
+  }
+
+  // 攻撃
+  attack(playerId, attackerIndex, target) {
+    // target: { type: "character"|"leader", index?: number, playerId?: string }
+    const p = this.players[playerId];
+    const attacker = p.field[attackerIndex];
+    if (!attacker || attacker.type !== "character") return false;
+    if (attacker.hasActed) {
+      this.addLog("既に行動済みです");
+      return false;
+    }
+    if (!attacker.canAct) {
+      this.addLog("このターンは行動できません");
+      return false;
+    }
+
+    // 果敢
+    let atk = attacker.currentAttack || attacker.attack || 0;
+    const bold = attacker.keywords.find(k => k.type === "bold");
+    if (bold) atk += bold.value;
+
+    const enemyId = playerId === "player" ? "cpu" : "player";
+    const enemy = this.players[enemyId];
+
+    if (target.type === "leader") {
+      // リーダー攻撃可能か判定（縦列にキャラがいるか）
+      if (!this.canAttackLeader(playerId, attackerIndex)) {
+        this.addLog("リーダーを攻撃できません（全列にキャラがいます）");
+        return false;
+      }
+      enemy.hp -= atk;
+      this.addLog(`${attacker.name} がリーダーに ${atk} ダメージ`);
+      attacker.hasActed = true;
+      this.checkWin();
+    } else if (target.type === "character") {
+      const defender = enemy.field[target.index];
+      if (!defender) return false;
+
+      // 攻撃可能か（前列後列・護衛・回避など）簡易チェック
+      if (!this.canAttackTarget(attacker, defender, target.index, enemy)) {
+        this.addLog("その対象には攻撃できません");
+        return false;
+      }
+
+      // ダメージ交換
+      const defAtk = defender.currentAttack || defender.attack || 0;
+      defender.currentHealth -= atk;
+      if (defender.type === "character") {
+        attacker.currentHealth -= defAtk;
+      }
+
+      this.addLog(`${attacker.name}(${atk}) ⇄ ${defender.name}(${defAtk})`);
+
+      // 破壊判定
+      if (defender.currentHealth <= 0) {
+        this.destroyCard(enemyId, target.index);
+      }
+      if (attacker.currentHealth <= 0) {
+        this.destroyCard(playerId, attackerIndex);
+      }
+
+      attacker.hasActed = true;
+    }
+
+    this.updateUI();
+    return true;
+  }
+
+  canAttackLeader(playerId, attackerIndex) {
+    const enemyId = playerId === "player" ? "cpu" : "player";
+    const enemy = this.players[enemyId];
+    // 3列すべてにキャラがいるか
+    const cols = [0, 1, 2]; // 前列0,1,2 / 後列3,4,5
+    let blockedCols = 0;
+    for (let col = 0; col < 3; col++) {
+      const front = enemy.field[col];
+      const back = enemy.field[col + 3];
+      if ((front && front.type === "character") || (back && back.type === "character")) {
+        blockedCols++;
+      }
+    }
+    return blockedCols < 3;
+  }
+
+  canAttackTarget(attacker, defender, defIndex, enemyPlayer) {
+    // 狙い撃ち
+    const hasSnipe = attacker.keywords.some(k => k.type === "snipe");
+
+    // 護衛チェック（狙い撃ちでも護衛は無視できない）
+    const guards = enemyPlayer.field
+      .map((c, i) => ({ c, i }))
+      .filter(({ c, i }) => c && c.keywords.some(k => k.type === "guard") && i < 3); // 前列のみ
+
+    if (guards.length > 0 && !defender.keywords.some(k => k.type === "guard")) {
+      // 護衛がいるのに護衛以外を攻撃しようとしている
+      if (!hasSnipe) return false; // 狙い撃ちでも護衛は無視不可なので、護衛以外は攻撃不可
+      // 狙い撃ちでも護衛を優先しなければならない → 護衛以外は攻撃不可
+      return false;
+    }
+
+    // 後列攻撃制限
+    if (defIndex >= 3) { // 後列
+      const frontIndex = defIndex - 3;
+      const front = enemyPlayer.field[frontIndex];
+      if (front && front.type === "character" && !hasSnipe) {
+        return false; // 前列にキャラがいると後列攻撃不可（狙い撃ちなら可）
+      }
+    }
+
+    // 回避
+    if (defender.keywords.some(k => k.type === "evasion")) {
+      if (!attacker.keywords.some(k => k.type === "evasion")) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  destroyCard(playerId, fieldIndex) {
+    const p = this.players[playerId];
+    const card = p.field[fieldIndex];
+    if (!card) return;
+    this.addLog(`${card.name} が破壊された`);
+    // 退場時効果（簡易）
+    p.grave.push(card);
+    p.field[fieldIndex] = null;
+  }
+
+  // エナジーを溜める（1マナで1、ターンに1回、最大3）
+  chargeEnergy(playerId) {
+    const p = this.players[playerId];
+    if (p.energyChargedThisTurn) {
+      this.addLog("このターンは既にエナジーを溜めました");
+      return false;
+    }
+    if (p.mana < 1) {
+      this.addLog("マナが足りません");
+      return false;
+    }
+    if (p.energy >= 3) {
+      this.addLog("エナジーは最大です");
+      return false;
+    }
+    p.mana -= 1;
+    p.energy += 1;
+    p.energyChargedThisTurn = true;
+    this.addLog(`${p.name} がエナジーを溜めた（${p.energy}/3）`);
+    this.updateUI();
+    return true;
+  }
+
+  // エナジー能力発動
+  useEnergyAbility(playerId) {
+    const p = this.players[playerId];
+    if (p.energy < 3) {
+      this.addLog("エナジーが足りません");
+      return false;
+    }
+    p.energy = 0;
+    this.addLog(`${p.name} がエナジー能力を発動！`);
+
+    // クラスごとの能力（今は全員neutralなので仮の共通処理）
+    // 実際はリーダーのクラスで分岐
+    this.addLog("（クラス能力は未実装のためスキップ）");
+    this.updateUI();
+    return true;
+  }
+
+  resolveSummonEffects(card, playerId) {
+    if (!card.effects) return;
+    card.effects.forEach(eff => {
+      if (eff.trigger === "summon") {
+        if (eff.id === "draw" && !eff.optional) {
+          this.players[playerId].draw(eff.value || 1);
+          this.addLog(`${card.name} の効果でドロー`);
+        }
+        // 他の効果は後で本格実装
+      }
+    });
+  }
+
+  resolvePlayEffects(card, playerId) {
+    // 簡易
+    this.addLog(`${card.name} の効果を解決（詳細実装はこれから）`);
+  }
+
+  checkWin() {
+    if (this.players.player.hp <= 0 && this.players.cpu.hp <= 0) {
+      this.winner = "draw";
+      this.addLog("引き分け！");
+    } else if (this.players.player.hp <= 0) {
+      this.winner = "cpu";
+      this.addLog("CPUの勝利！");
+    } else if (this.players.cpu.hp <= 0) {
+      this.winner = "player";
+      this.addLog("プレイヤーの勝利！");
+    }
+  }
+
+  // CPUの簡易行動
+  cpuTurn() {
+    const p = this.players.cpu;
+    this.addLog("CPUが考えています...");
+
+    // 1. 出せるキャラを適当に出す
+    for (let i = 0; i < p.hand.length; i++) {
+      const card = p.hand[i];
+      if ((card.type === "character" || card.type === "item") && p.mana >= card.cost) {
+        const empty = p.field.findIndex(s => s === null);
+        if (empty !== -1) {
+          this.playCharacterOrItem("cpu", i, empty);
+          break;
+        }
+      }
+    }
+
+    // 2. 攻撃できるものを攻撃
+    for (let i = 0; i < 6; i++) {
+      const atk = p.field[i];
+      if (atk && atk.type === "character" && !atk.hasActed && atk.canAct) {
+        // 敵のキャラを探す
+        const enemy = this.players.player;
+        for (let j = 0; j < 6; j++) {
+          if (enemy.field[j] && enemy.field[j].type === "character") {
+            this.attack("cpu", i, { type: "character", index: j });
+            break;
+          }
+        }
+        // キャラがいなければリーダー
+        if (!atk.hasActed) {
+          this.attack("cpu", i, { type: "leader" });
+        }
+      }
+    }
+
+    // 3. ターン終了
+    setTimeout(() => this.endTurn(), 800);
+  }
+
+  addLog(msg) {
+    this.log.push(msg);
+    console.log(msg);
+    if (typeof updateLogUI === "function") updateLogUI();
+  }
+
+  updateUI() {
+    if (typeof renderGame === "function") renderGame();
+  }
+}let selectedHandIndex = null;
+let selectedFieldIndex = null;
+let attackMode = false;
+
+function renderGame() {
+  const g = window.game;
+  if (!g) return;
+
+  // リーダーHP・マナ・エナジー
+  document.getElementById("player-hp").textContent = g.players.player.hp;
+  document.getElementById("cpu-hp").textContent = g.players.cpu.hp;
+  document.getElementById("player-mana").textContent = `${g.players.player.mana}/${g.players.player.maxMana}`;
+  document.getElementById("cpu-mana").textContent = `${g.players.cpu.mana}/${g.players.cpu.maxMana}`;
+  document.getElementById("player-energy").textContent = g.players.player.energy;
+  document.getElementById("cpu-energy").textContent = g.players.cpu.energy;
+
+  // フィールド描画
+  renderField("player", g.players.player.field);
+  renderField("cpu", g.players.cpu.field);
+
+  // 手札
+  renderHand(g.players.player.hand);
+
+  // ターン表示
+  const turnEl = document.getElementById("turn-info");
+  if (turnEl) {
+    turnEl.textContent = g.currentPlayerId === "player" ? "あなたのターン" : "CPUのターン";
+  }
+
+  // ボタンの有効/無効
+  const isPlayerTurn = g.currentPlayerId === "player" && g.phase === "play" && !g.winner;
+  document.getElementById("btn-end-turn").disabled = !isPlayerTurn;
+  document.getElementById("btn-energy").disabled = !isPlayerTurn || g.players.player.energyChargedThisTurn || g.players.player.energy >= 3;
+  document.getElementById("btn-energy-ability").disabled = !isPlayerTurn || g.players.player.energy < 3;
+}
+
+function renderField(playerId, field) {
+  for (let i = 0; i < 6; i++) {
+    const el = document.getElementById(`${playerId}-slot-${i}`);
+    if (!el) continue;
+    const card = field[i];
+    el.innerHTML = "";
+    el.className = "slot";
+    if (card) {
+      el.classList.add("has-card");
+      if (card.hasActed) el.classList.add("acted");
+      if (card.keywords.some(k => k.type === "guard")) el.classList.add("guard");
+
+      const atk = (card.currentAttack ?? card.attack ?? 0);
+      const hp = card.currentHealth ?? card.health ?? 0;
+      el.innerHTML = `
+        <div class="card-name">${card.name}</div>
+        <div class="card-stats">${atk} / ${hp}</div>
+        <div class="card-cost">${card.cost}</div>
+      `;
+      el.onclick = () => onFieldClick(playerId, i);
+    } else {
+      el.onclick = () => onEmptySlotClick(playerId, i);
+    }
+  }
+}
+
+function renderHand(hand) {
+  const container = document.getElementById("player-hand");
+  container.innerHTML = "";
+  hand.forEach((card, index) => {
+    const div = document.createElement("div");
+    div.className = "hand-card";
+    if (selectedHandIndex === index) div.classList.add("selected");
+    div.innerHTML = `
+      <div class="card-cost">${card.cost}</div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-type">${card.isSong ? "歌" : card.type}</div>
+    `;
+    div.onclick = () => onHandClick(index);
+    container.appendChild(div);
+  });
+}
+
+function onHandClick(index) {
+  const g = window.game;
+  if (g.currentPlayerId !== "player" || g.phase !== "play") return;
+
+  selectedHandIndex = index;
+  selectedFieldIndex = null;
+  attackMode = false;
+  renderGame();
+}
+
+function onEmptySlotClick(playerId, slotIndex) {
+  if (playerId !== "player") return;
+  const g = window.game;
+  if (g.currentPlayerId !== "player" || selectedHandIndex === null) return;
+
+  const card = g.players.player.hand[selectedHandIndex];
+  if (card.type === "character" || card.type === "item") {
+    g.playCharacterOrItem("player", selectedHandIndex, slotIndex);
+    selectedHandIndex = null;
+  }
+}
+
+function onFieldClick(playerId, index) {
+  const g = window.game;
+
+  // 自分の場をクリック → 攻撃モード開始 or 歌支払いに使う
+  if (playerId === "player" && g.currentPlayerId === "player") {
+    if (selectedHandIndex !== null) {
+      const card = g.players.player.hand[selectedHandIndex];
+      if (card && card.type === "action" && card.isSong) {
+        // 歌カードをキャラで支払う
+        g.playAction("player", selectedHandIndex, index);
+        selectedHandIndex = null;
+        renderGame();
+        return;
+      }
+    }
+
+    // 攻撃モード
+    selectedFieldIndex = index;
+    attackMode = true;
+    renderGame();
+    return;
+  }
+
+  // 相手の場をクリック → 攻撃
+  if (playerId === "cpu" && attackMode && selectedFieldIndex !== null) {
+    g.attack("player", selectedFieldIndex, { type: "character", index });
+    selectedFieldIndex = null;
+    attackMode = false;
+    renderGame();
+  }
+}
+
+function attackLeader() {
+  const g = window.game;
+  if (!attackMode || selectedFieldIndex === null) return;
+  g.attack("player", selectedFieldIndex, { type: "leader" });
+  selectedFieldIndex = null;
+  attackMode = false;
+  renderGame();
+}
+
+function updateLogUI() {
+  const el = document.getElementById("log");
+  if (!el || !window.game) return;
+  el.innerHTML = window.game.log.slice(-12).map(l => `<div>${l}</div>`).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+function endTurn() {
+  window.game.endTurn();
+}
+
+function chargeEnergy() {
+  window.game.chargeEnergy("player");
+}
+
+function useEnergyAbility() {
+  window.game.useEnergyAbility("player");
+}window.game = new Game();
+
+// ゲーム開始
+window.game.start();
+window.game.updateUI();
+updateLogUI();
+
+console.log("ゲーム開始！ カード枚数:", CARDS.length);  </script>
+</body>
+</html>
